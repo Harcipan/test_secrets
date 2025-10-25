@@ -1,32 +1,34 @@
 name: Unity License Check
 
 on:
-  workflow_dispatch: # run manually from GitHub UI
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  check-license:
+  license-check:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Unity in batch mode
-        with:
-          super_secret: ${{ secrets.UNITY_LICENSE }}
+      # 1) Use the secret as an env var in a shell step (for checks, scripts, etc.)
+      - name: Verify UNITY_LICENSE is present
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         run: |
-          set -e
-          docker run --rm \
-            -e UNITY_LICENSE=super_secret \
-            ghcr.io/game-ci/unity-editor:2022.3.48f1-linux-il2cpp-3 \
-            -batchmode -nographics -quit -logFile - \
-          | tee unity_log.txt
-
-      - name: Check license status in log
-        run: |
-          if grep -E "License type:|ULS|LICENSE SYSTEM" unity_log.txt >/dev/null; then
-            echo "✅ Unity license detected and active."
-          else
-            echo "❌ No valid license detected — check UNITY_LICENSE secret." >&2
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "❌ UNITY_LICENSE secret is not set."
             exit 1
           fi
+          # Mask it so it can’t leak if echoed by mistake
+          echo "::add-mask::$UNITY_LICENSE"
+          echo "✅ UNITY_LICENSE secret is set (value is masked)."
+
+      # 2) Pass the secret as an input to an action (replace inputs with what your action expects)
+      - name: Run license-related action
+        uses: some-org/some-action@v1
+        with:
+          license_blob: ${{ secrets.UNITY_LICENSE }}   # <-- input name depends on the action
+          # other_input: value
