@@ -1,19 +1,17 @@
 name: Unity License Check
 
 on:
+  pull_request:
   push:
     branches: [ main ]
-  pull_request:
   workflow_dispatch:
 
 jobs:
   license-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 1) Use the secret as an env var in a shell step (for checks, scripts, etc.)
       - name: Verify UNITY_LICENSE is present
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -22,13 +20,5 @@ jobs:
             echo "❌ UNITY_LICENSE secret is not set."
             exit 1
           fi
-          # Mask it so it can’t leak if echoed by mistake
           echo "::add-mask::$UNITY_LICENSE"
-          echo "✅ UNITY_LICENSE secret is set (value is masked)."
-
-      # 2) Pass the secret as an input to an action (replace inputs with what your action expects)
-      - name: Run license-related action
-        uses: some-org/some-action@v1
-        with:
-          license_blob: ${{ secrets.UNITY_LICENSE }}   # <-- input name depends on the action
-          # other_input: value
+          echo "✅ UNITY_LICENSE secret is set (value masked)."
