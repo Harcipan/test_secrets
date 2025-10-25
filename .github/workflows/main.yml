@@ -30,10 +30,3 @@ jobs:
             echo "❌ No valid license detected — check UNITY_LICENSE secret." >&2
             exit 1
           fi
-
-    steps:
-  - name: Hello world action
-    with: # Set the secret as an input
-      super_secret: ${{ secrets.SuperSecret }}
-    env: # Or as an environment variable
-      super_secret: ${{ secrets.SuperSecret }}
